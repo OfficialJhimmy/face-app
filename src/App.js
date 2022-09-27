@@ -1,10 +1,10 @@
-import * as faceapi from "face-api.js";
 import React, { useState, useRef, useEffect } from "react";
+import * as faceapi from "face-api.js";
 import "./App.css";
 
 function App() {
-  const [models, setModel] = useState(false);
-  const [startVideo, setstartVideo] = useState(false);
+  const [models, setModelsLoaded] = useState(false);
+  const [startWebcam, setStartWebcam] = useState(false);
 
   const videoRef = useRef();
   const videoHeight = 400;
@@ -12,7 +12,7 @@ function App() {
   const borderRadius = 50;
   const canvasRef = useRef();
 
-  const [faces, setFaces] = useState();
+  // const [faces, setFaces] = useState();
 
   // To Load Models
   useEffect(() => {
@@ -24,25 +24,25 @@ function App() {
         faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
         faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
         faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
-      ]).then(setModel(true));
+      ]).then(setModelsLoaded(true));
     };
     loadModels();
   }, []);
 
-  // To handle Capture
-  const handleImage = () => {
-    // canvasRef.current
-    //   .getContext("2d")
-    //   .clearRect(0, 0, videoWidth, videoHeight);
+  //   // To handle Capture
+  //   const handleImage = () => {
+  //     // canvasRef.current
+  //     //   .getContext("2d")
+  //     //   .clearRect(0, 0, videoWidth, videoHeight);
 
-      // console.log(canvasRef.current
-      //   .getContext("2d")
-      //   .clearRect(0, 0, videoWidth, videoHeight));
-  };
+  //       // console.log(canvasRef.current
+  //       //   .getContext("2d")
+  //       //   .clearRect(0, 0, videoWidth, videoHeight));
+  //   };
 
-  // To open webcam
-  const startWebcamVideo = () => {
-    setstartVideo(true);
+  //   // To open webcam
+  const startVideo = () => {
+    setStartWebcam(true);
     navigator.mediaDevices
       .getUserMedia({ video: { width: 300 } })
       .then((stream) => {
@@ -55,8 +55,8 @@ function App() {
       });
   };
 
-  // to detect face
-  const handleVideo = () => {
+  // To detect face
+  const handleVideoOnPlay = () => {
     setInterval(async () => {
       if (canvasRef && canvasRef.current) {
         canvasRef.current.innerHTML = faceapi.createCanvasFromMedia(
@@ -65,7 +65,6 @@ function App() {
         const displaySize = {
           width: videoWidth,
           height: videoHeight,
-          borderRadius: borderRadius,
         };
 
         faceapi.matchDimensions(canvasRef.current, displaySize);
@@ -100,23 +99,22 @@ function App() {
             canvasRef.current,
             resizedDetections
           );
-        // console.log(canvasRef.current.toDataURL("image/jpeg"));
       }
     }, 100);
   };
 
-  // Close webcam
+  // to close webcam
   const closeWebcam = () => {
     videoRef.current.pause();
     videoRef.current.srcObject.getTracks()[0].stop();
-    setstartVideo(false);
+    setStartWebcam(false);
   };
 
   return (
     <div className="face__container">
       <h2>Hello Let's Capture your face</h2>
       <div>
-        {startWebcamVideo && models ? (
+        {startWebcam && models ? (
           <button onClick={closeWebcam} className="btn--face">
             Close
           </button>
@@ -126,45 +124,39 @@ function App() {
           </button>
         )}
       </div>
-      {startVideo ? (
+      {startWebcam ? (
         models ? (
-          <>
+          <div>
             <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                padding: "10px",
+              }}
             >
               <video
                 ref={videoRef}
                 height={videoHeight}
                 width={videoWidth}
-                onPlay={handleVideo}
-                
+                onPlay={handleVideoOnPlay}
+                style={{ borderRadius: "10px" }}
               />
               <canvas ref={canvasRef} style={{ position: "absolute" }} />
             </div>
-          </>
+          </div>
         ) : (
-          <div>loading...</div>
+          <div>Loading...</div>
         )
       ) : (
         <></>
       )}
-
-      {/* { startVideo === true ? <button disabled={startVideo}>Capture</button> : <button disabled>Face not detected</button>} */}
-      {/* <button
-        disabled={!startVideo}
-        className="btn--capture"
-        onClickCapture={handleImage}
-      >
-        Capture
-      </button> */}
       <button
         // disabled={!startVideo}
         className="btn--capture"
-        onClick={handleImage}
+        // onClick={handleImage}
       >
         Capture
       </button>
-
-      {/* <img src={canvasRef.current.toDataURL("image/webp")} alt="new"/> */}
     </div>
   );
 }
